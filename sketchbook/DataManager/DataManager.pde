@@ -2,11 +2,19 @@ import processing.serial.*;
 
 Serial port;
 String strX, strY, strZ;
+String rotA = "0.0";
+String rotB = "0.0";
+String rotC = "0.0";
+
 float GX, GY, GZ;
+
+float rotX = 0.0;
+float rotY = 0.0;
+float rotZ = 0.0;
 
 int time = 0;
 
-int N = 100000;
+int N = 1000;
 int[] x = new int[N];
 int[] y = new int[N];
 int[] z = new int[N];
@@ -25,47 +33,73 @@ void setup() {
     print("Port initialization error.");
   }
   //GRAPHICS INIT
-  size(1366, 768, P3D);
+  size(1080, 640, P3D);
   background(0);
   noFill();
   stroke(255);
   strokeWeight(1);
   smooth();
+  for(int n=0; n<N; n++) {
+    x[n] = 0;
+    y[n] = 0;
+    z[n] = 0;
+  }
 }
 
 void draw() {
   translate(width/2, height/2);
   background(0);
+  if((rotA!=null)&&(rotB!=null)&&(rotC!=null)) {
+    rotX = float(rotA);
+    rotY = float(rotB);
+    rotZ = float(rotC);
+  }
+  rotateX(rotX);
+  rotateY(rotY);
+  rotateZ(rotZ);
   //
+  for(int i = N-1; i>0; i--) {
+    x[i] = x[i-1];
+    y[i] = y[i-1];
+    z[i] = z[i-1];
+  }  
   if(port!=null) {
     //DATA COLLECTING AND PREPROCESSING
     if((port.available() > 0)) {
       strX = port.readStringUntil('\n');
       strY = port.readStringUntil('\n');
       strZ = port.readStringUntil('\n');
-      /*if(time<10) {
-        //handler of initial vector
-      }*/
-      boolean test = (strX!=null)&&(strY!=null)&&(strZ!=null);
-      if(test) {
+      rotA = port.readStringUntil('\n');
+      rotB = port.readStringUntil('\n');
+      rotC = port.readStringUntil('\n');
+      //
+      if((strX!=null)&&(strY!=null)&&(strZ!=null)) {
         float vect = 50.0;
         GX = float(strX);
         GY = float(strY);
         GZ = float(strZ);
-        x[time] = (int)(GX/vect);
-        y[time] = (int)(GY/vect);
-        z[time] = (int)(GZ/vect);
+        x[0] = (int)(GX/vect);
+        y[0] = (int)(GY/vect);
+        z[0] = (int)(GZ/vect);
         //print(x[time]+" "+y[time]+" "+z[time]+"\n");
         time++;
       }
+      //GAUNTLET ROTATION
+      /*
+      if((rotA!=null)&&(rotB!=null)&&(rotC!=null)) {
+        
+        rotateX(float(rotA));
+        rotateY(float(rotB));
+        rotateZ(float(rotC));
+      }*/
     }
   }
   //
-  //MOUSE ROTATION
-  if(mouseButton==LEFT) {
-    rotateY(mouseX/100.0);
-    rotateZ(mouseY/100.0);
-  }
+  //MOUSE AXIS ROTATION
+  /*if(mouseButton==LEFT) {
+    rotateY((mouseX-width/2.0)/100.0);
+    rotateX((-mouseY+height/2.0)/100.0);
+  }*/
   //
   //AXES AND NAMES
   noStroke();
@@ -76,22 +110,24 @@ void draw() {
   //
   //DRAWING POINTS
   strokeWeight(3);
-  for(int i = 0; i<time; i++) {
-    stroke(255);
+  for(int i = 0; i<N; i++) {
+    float colCtrl = (1 - (float)i/N);
+    float intnst = sqrt(x[i]*x[i] + y[i]*y[i] + z[i]*z[i]);
+    int limit = 255;
+    stroke(limit*colCtrl*abs(x[i])/intnst, limit*colCtrl*abs(y[i])/intnst, limit*colCtrl*abs(z[i])/intnst);
     point(x[i], y[i], z[i]);
   }
+  //ballDrop();
   //RED AVERAGE DOT DRAWING
   float xi, yi, zi;
   xi = 0.0;
   yi = 0.0;
   zi = 0.0;
   int ease = 20; //NUMBER OF POINTS USED TO AVERAGE
-  if(time > ease){
-    for(int n = 1; n<ease; n++) {
-      xi+=x[time-n];
-      yi+=y[time-n];
-      zi+=z[time-n];
-    }
+  for(int n = 0; n<ease; n++) {
+    xi+=x[n];
+    yi+=y[n];
+    zi+=z[n];
   }
   xi /= ease;
   yi /= ease;
@@ -99,29 +135,15 @@ void draw() {
   strokeWeight(8);
   stroke(255,0,0);
   point(xi,yi,zi);
-  //GREEN AVERAGE DOT DRAWING
-  /*float xa, ya, za;
-  xa = 0.0;
-  ya = 0.0;
-  za = 0.0;
-  for(int n = 0; n<time; n++) {
-    xa+=x[n];
-    ya+=y[n];
-    za+=z[n];
-  }
-  xa /= time;
-  ya /= time;
-  za /= time;
-  strokeWeight(8);
-  stroke(0,255,0);
-  point(xa, ya, za);*/
+  /*
   //ZEROING DATA IF OUT OF BOUNDS
   if(time>=N) {
     time = 0;
   }
-  if(port!=null) {
+  */
+  /*if(port!=null) {
     port.clear();
-  }
+  }*/
 }
 //
 //CENTRAL SPHERE 
@@ -159,3 +181,25 @@ void drawAxes(float size){
   text("-Z", 0, 0, -300);
   line(0,0,0,0,0,-size);
 }
+/*
+void drawPoint(int x, int y, int z, int n) {
+  float colCtrl = (1 - (float)n/N);
+  float intnst = sqrt(x*x + y*y + z*z);
+  int limit = 255;
+  stroke(limit*colCtrl*abs(x)/intnst, limit*colCtrl*abs(y)/intnst, limit*colCtrl*abs(z)/intnst);
+  point(x, y, z);
+}
+
+void ballDrop() {
+  float h = PI/100.0;
+  float Rad = 100;
+  for(float u = 0; u<2*PI; u+=h) {
+    for(float t = 0; t<2*PI; t+=h) {
+      float p = Rad*cos(u)*cos(t);
+      float q = Rad*cos(u)*sin(t);
+      float r = Rad*sin(u);
+      drawPoint((int)p, (int)q, (int)r, 1);
+    }
+  }
+}
+*/
