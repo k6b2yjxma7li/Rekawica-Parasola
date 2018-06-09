@@ -1,9 +1,10 @@
 /**
- * Adruino wysyła accelX, accelY, accelZ do processingu i laserów
+ * Arduino wysyła accelX, accelY, accelZ do processingu i laserów
  * Kiedy przycisk jest wciśnięty to wysyłamy sygnał z kątem o jaki się obraca, 
  * żeby obrócić widok.
  * Kiedy puszczamy przycisk wysyłamy dalej ostatnie wartości odczytane przy wciśniętym przecisku.
  * Potrzebuje 3 zmiennych, na które nakładam poprawki ciągle sa to outRot(X/Y/Z)
+ * 
  */
 
 #include<Wire.h>
@@ -35,12 +36,12 @@ void setup(){
 }
 
 void loop(){
-  if(analogRead(sensorL)>300) {
+  if(analogRead(sensorL)>300) { //fleks na A0 uruchamia sterowanie układem odniesienia
     readingAngle = true;
   }else {
     readingAngle = false;
   }
-  if(analogRead(sensorR)>300) {
+  if(analogRead(sensorR)>300) { //fleks na A1 zeruje rotację układu
     outRotX = 0.0;
     outRotY = 0.0;
     outRotZ = 0.0;
@@ -48,7 +49,7 @@ void loop(){
   recordAccelRegisters();
   recordGyroRegisters();
   printData();
-  //Serial.print(analogRead(sensorL));
+  //Serial.print(analogRead(sensorL)); //narzędzie debugujące
   delay(20);
 }
 
