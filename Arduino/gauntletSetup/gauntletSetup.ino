@@ -40,12 +40,12 @@ void loop(){
     readingAngle = true;
   }else {
     readingAngle = false;
-  }
+  }/*
   if(analogRead(sensorR)>300) { //fleks na A1 zeruje rotację układu
     outRotX = 0.0;
     outRotY = 0.0;
     outRotZ = 0.0;
-  }
+  }*/
   recordAccelRegisters();
   recordGyroRegisters();
   printData();
@@ -110,17 +110,17 @@ void processGyroData() {
     outRotY += rotY;
     outRotZ += rotZ;
     if(outRotX >= 6.28318530718)
-      outRotX-=6.28318530718;
+      outRotX-=2*6.28318530718;
     if(outRotY >= 6.28318530718)
-      outRotY-=6.28318530718;
+      outRotY-=2*6.28318530718;
     if(outRotZ >= 6.28318530718)
-      outRotZ-=6.28318530718;
+      outRotZ-=2*6.28318530718;
     if(outRotX <= -6.28318530718)
-      outRotX+=6.28318530718;
+      outRotX+=2*6.28318530718;
     if(outRotY <= -6.28318530718)
-      outRotY+=6.28318530718;
+      outRotY+=2*6.28318530718;
     if(outRotZ <= -6.28318530718)
-      outRotZ+=6.28318530718;
+      outRotZ+=2*6.28318530718;
   }
 }
 
@@ -129,7 +129,7 @@ void printData() {
   Serial.println(accelY+371);
   Serial.println(accelZ+2267);
   //
-  Serial.println(outRotX/5.0);
-  Serial.println(outRotY/5.0);
-  Serial.println(outRotZ/5.0);
+  Serial.println(outRotX/2.0);
+  Serial.println(outRotY/2.0);
+  Serial.println(outRotZ/2.0);
 }
